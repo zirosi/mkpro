@@ -90,10 +90,12 @@ int checkArgs(std::set<std::string> args, const std::string projectName) {
   if (args == SrcBuildMakeArgs) {
     int returnValue = addMakefile(projectName, "newCppSrcBuild");
     return returnValue;
-  }
-  if (args == SrcBuildCMakeArgs) {
+  } if (args == SrcBuildCMakeArgs) {
     int returnValue = addCmakelists(projectName, "newCppSrcBuild");
     return returnValue;
+  } else {
+    std::cerr << "Incorrect argument(s)\n";
+    return 1;
   }
 
   return 1;
