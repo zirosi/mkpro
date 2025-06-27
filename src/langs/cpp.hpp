@@ -46,9 +46,11 @@ int newCppSrcBuild(const std::string projectName) {
   return returnValue;
 }
 
-int newCppSrcBuildMake(const std::string projectName) {
-  newCppSrcBuild(projectName);
-  
+int addMakefile(const std::string projectName, std::string base) {
+  if ( base == "newCppSrcBuild" ) {
+    newCppSrcBuild(projectName);
+  }
+
   std::string makefilePath = projectName + "/makefile";
 
   std::ofstream makefileFile(makefilePath);
@@ -61,11 +63,36 @@ int newCppSrcBuildMake(const std::string projectName) {
   return 0;
 }
 
+int addCmakelists(const std::string projectName, std::string base) {
+  std::string mainCppPath;
+  int returnValue = 0;
+
+  if ( base == "newCppSrcBuild" ) {
+    returnValue = newCppSrcBuild(projectName);
+    std::string mainCppPath = projectName + "/src/main.cpp"; 
+  }
+
+  std::string cmakelistsPath = projectName + "/CmakeLists.txt";
+
+  std::ofstream cmakelistsFile(cmakelistsPath);
+
+  cmakelistsFile << "cmake_minimum_required (VERSION 3.1)\n\n";
+  cmakelistsFile << "project(" << projectName << ")\n\n";
+  cmakelistsFile << "add_executable(" << projectName << " " << mainCppPath << ")";
+
+  return returnValue;
+}
+
 int checkArgs(std::set<std::string> args, const std::string projectName) {
   const std::set<std::string> SrcBuildMakeArgs = {"--make"};
+  const std::set<std::string> SrcBuildCMakeArgs = {"--cmake"};
 
   if (args == SrcBuildMakeArgs) {
-    int returnValue = newCppSrcBuildMake(projectName);
+    int returnValue = addMakefile(projectName, "newCppSrcBuild");
+    return returnValue;
+  }
+  if (args == SrcBuildCMakeArgs) {
+    int returnValue = addCmakelists(projectName, "newCppSrcBuild");
     return returnValue;
   }
 
@@ -86,7 +113,7 @@ int cpp(int argc, char* argv[]) {
       args.insert(std::string(argv[i]));
     }
 
-    checkArgs(args, projectName);
+    int returnValue = checkArgs(args, projectName);
 
   } else {
     returnValue = 1;
