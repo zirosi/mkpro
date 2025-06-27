@@ -4,7 +4,7 @@
 
 #include "include.cpp"
 
-std::string version = "1.0.0 DEV";
+std::string version = "0.1 DEV";
 
 void help() {
   std::cout << "mkpro version: " << version << std::endl;
