@@ -218,7 +218,7 @@ int cpp(int argc, char* argv[]) {
       args.insert(std::string(argv[i]));
     }
 
-    int returnValue = checkArgs(args, projectName);
+    returnValue = checkArgs(args, projectName);
 
   } else {
     returnValue = 1;
