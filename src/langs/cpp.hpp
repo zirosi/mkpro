@@ -7,6 +7,38 @@
 #include <filesystem>
 #include <set>
 
+int newCppBuild(const std::string projectName) {
+  int returnValue = 0;
+
+  std::string buildPath = projectName + "/build";
+  std::string mainCppPath = projectName + "/main.cpp";
+
+  std::filesystem::create_directories(projectName);
+  std::filesystem::create_directories(buildPath);
+
+  std::ofstream mainCppFile(mainCppPath);
+
+  mainCppFile << "#include <iostream>\n\n";
+  mainCppFile << "int main() {\n";
+  mainCppFile << "  std::cout << \"hello world!\\n\";\n";
+  mainCppFile << "  return 0;\n";
+  mainCppFile << "}";
+
+  mainCppFile.close();
+
+  if (std::filesystem::exists(projectName) == false) {
+    std::cerr << "Could not make the project folder\n";
+    returnValue = 1;
+  }
+  if (std::filesystem::exists(buildPath) == false) {
+    std::cerr << "Could not make the build folder\n";
+    std::filesystem::remove_all(projectName);
+    returnValue = 1;
+  }
+
+  return returnValue;
+}
+
 int newCppSrcBuild(const std::string projectName) {
   int returnValue = 0;
 
@@ -47,8 +79,15 @@ int newCppSrcBuild(const std::string projectName) {
 }
 
 int addMakefile(const std::string projectName, std::string base) {
+  std::string mainCppPath;
+  int returnValue = 0;
+
   if ( base == "newCppSrcBuild" ) {
-    newCppSrcBuild(projectName);
+    returnValue = newCppSrcBuild(projectName);
+    mainCppPath = "src/main.cpp"; 
+  } if ( base == "newCppBuild" ) {
+    returnValue = newCppBuild(projectName);
+    mainCppPath = "main.cpp"; 
   }
 
   std::string makefilePath = projectName + "/makefile";
@@ -56,11 +95,11 @@ int addMakefile(const std::string projectName, std::string base) {
   std::ofstream makefileFile(makefilePath);
 
   makefileFile << "main:\n";
-  makefileFile << "  g++ src/main.cpp -o build/main";
+  makefileFile << "  g++ " << mainCppPath << " -o build/main";
 
   makefileFile.close();
   
-  return 0;
+  return returnValue;
 }
 
 int addCmakelists(const std::string projectName, std::string base) {
@@ -69,7 +108,10 @@ int addCmakelists(const std::string projectName, std::string base) {
 
   if ( base == "newCppSrcBuild" ) {
     returnValue = newCppSrcBuild(projectName);
-    std::string mainCppPath = projectName + "/src/main.cpp"; 
+    mainCppPath = "src/main.cpp"; 
+  } else if ( base == "newCppBuild" )  {
+    returnValue = newCppBuild(projectName);
+    mainCppPath = "main.cpp";
   }
 
   std::string cmakelistsPath = projectName + "/CmakeLists.txt";
@@ -86,8 +128,20 @@ int addCmakelists(const std::string projectName, std::string base) {
 int checkArgs(std::set<std::string> args, const std::string projectName) {
   const std::set<std::string> SrcBuildMakeArgs = {"--make"};
   const std::set<std::string> SrcBuildCMakeArgs = {"--cmake"};
+  const std::set<std::string> BuildArgs = {"--nosrc"};
+  const std::set<std::string> BuildMakeArgs = {"--nosrc", "--make"};
+  const std::set<std::string> BuildCmakeArgs = {"--nosrc", "--cmake"};
 
-  if (args == SrcBuildMakeArgs) {
+  if (args == BuildArgs) {
+    int returnValue = newCppBuild(projectName);
+    return returnValue;
+  } if ( args == BuildMakeArgs ) {
+    int returnValue = addMakefile(projectName, "newCppBuild");
+    return returnValue;
+  } if ( args == BuildCmakeArgs ) {
+    int returnValue = addCmakelists(projectName, "newCppBuild");
+    return returnValue;
+  } if (args == SrcBuildMakeArgs) {
     int returnValue = addMakefile(projectName, "newCppSrcBuild");
     return returnValue;
   } if (args == SrcBuildCMakeArgs) {
